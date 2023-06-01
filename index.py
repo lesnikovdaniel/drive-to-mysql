@@ -27,6 +27,8 @@ for item in files:
     rematch = re.search(r'(^.*)_([А-Я].*).csv', item['name'])   # регулярное выражение для обработки имени файла откуда берется регион и название data_set
     update_date = re.match(r'(\d{4}-\d{2}-\d{2})T(\d{2}(:)\d{2}:\d{2}?)',item['modifiedTime']) # регулярное выражение обработки времени изменения файла в Google Drive
     fileId = item['id']
+    webViewLink = item['webViewLink']
+
     if rematch : region = str(rematch.group(1)) # достаём регион
     if rematch : data_set_name = str(rematch.group(2)) # достаём имя data_set
     if update_date : datetime = str(update_date.group(1))+" "+str(update_date.group(2)) # достаём время изменения файла на диске
@@ -67,5 +69,9 @@ for item in files:
         cursorObject.execute(result)
         connection.commit()
 
+        query="INSERT IGNORE INTO data_set(file_path,id_passport) VALUES('{}',(SELECT id_passport FROM data_set_passport WHERE owner_kpp=(SELECT owner_kpp FROM data_set_owner WHERE region='{}') AND data_set_name='{}'))".format(webViewLink,region,data_set_name)
+        cursorObject = connection.cursor()
+        cursorObject.execute(query)
+        connection.commit()
     except Exception as e:
         print(e)
